@@ -12,17 +12,15 @@ from Utils import excel_lib
 import re
 
 def get_vlan_encap(my_fabric, api_name, column):
-    output = {}
-    for i in column:
-        print(i)
-        output[i] = []
+    output = []
     data_json = json.loads(my_fabric.apic_json_get(api_name))
     for vlan in data_json['imdata']:
         for k, v in vlan.items():
+            row = {}
             for j, attribute in v.items():
                 for i in column:
-                   output[i].append(attribute[i])
-                   #print(attribute[i])
+                   row[i]= attribute[i]
+                output.append(row)
     return output
  
 
@@ -40,8 +38,8 @@ def main():
     excel.create_sheet("Vlan_Encap", column)
 
     vlan_column_for_excel = get_vlan_encap(my_fabric, 'vlanCktEp', column)
+    print(vlan_column_for_excel)
 
-    print(vlan_column_for_excel['encap'])
     excel.fill_sheet(vlan_column_for_excel, "Vlan_Encap")
     print("Vlan_Encap.xlsx successfully created")
 
