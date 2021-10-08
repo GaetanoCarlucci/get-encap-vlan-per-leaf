@@ -1,0 +1,4 @@
+*.json
+*.xlsx
+venv
+Utils/__pycache__/
