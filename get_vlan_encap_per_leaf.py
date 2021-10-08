@@ -38,8 +38,7 @@ def main():
     excel.create_sheet("Vlan_Encap", column)
 
     vlan_column_for_excel = get_vlan_encap(my_fabric, 'vlanCktEp', column)
-    print(vlan_column_for_excel)
-
+    
     excel.fill_sheet(vlan_column_for_excel, "Vlan_Encap")
     print("Vlan_Encap.xlsx successfully created")
 
