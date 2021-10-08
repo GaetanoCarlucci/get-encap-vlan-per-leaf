@@ -1,7 +1,7 @@
-# Get Contract Relationships
+# Get Vlan Encap Per Leaf
 
 
-This tool collects the Contracts deployed in the ACI fabric and shows how their are used in an excel files.
+This tool collects the Vlan Encap used on each leaf shows them in an excel files.
 
 ## Getting Started
 
@@ -45,7 +45,7 @@ then run the script using a *python3* interpreter:
 $python3 main.py
 ```
 
-it will create the xlsx file `Contract_Relationship.xlsx` that contains a global sheet with the summary report and details sheet for each resource that lists all of them:
+it will create the xlsx file `Vlan_Encap_Per_Leaf.xlsx` that contains a sheet with the list of encap vlan used on each leaf:
 
 
 <img src="excel.png" width="400" />
