@@ -16,8 +16,8 @@ def parse_column(column_for_excel_raw):
     column = ['VLAN','node_id','tenant_name','ap_name','epg_name']
     for row in column_for_excel_raw:
         new_row = {}
+        ap_name = ''
         for k, v in row.items():
-            ap_name = ''
             if k == 'epgDn':
                 if re.search('/epg-(.*)', v):
                     epg_name = (re.search('/epg-(.*)', v)).group(1)
@@ -60,17 +60,15 @@ def main():
     cookie = my_fabric.get_cookie()
     my_fabric.set_cookie(cookie)
 
-    excel = excel_lib.Excel('./', "Vlan_Encapddd")
+    excel = excel_lib.Excel('./', "Vlan_Encap5")
     column_raw = ["encap", "epgDn", "dn"]
 
     column_for_excel_raw = get_vlan_encap(my_fabric, 'vlanCktEp', column_raw)
     column_for_excel = parse_column(column_for_excel_raw)
     
-    #print(column_for_excel[0])
     excel.create_sheet("Vlan_Encap", column_for_excel[1])
     excel.fill_sheet(column_for_excel[0], "Vlan_Encap")
-    #excel.create_sheet("Vlan_Encap", column_raw)
-    #excel.fill_sheet(column_for_excel_raw, "Vlan_Encap")
+
     print("Vlan_Encap.xlsx successfully created")
 
 if __name__ == "__main__":
