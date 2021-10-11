@@ -11,9 +11,10 @@ from Utils.Session import Session
 from Utils import excel_lib
 import re
 
-def parse_column(column_for_excel_raw):
+# parsed the column in order to get a more user friendly output 
+def parse_column(column_for_excel_raw, node_names):
     output = []
-    column = ['VLAN','node_id','tenant_name','ap_name','epg_name']
+    column = ['VLAN','node_id', 'host_name', 'tenant_name','ap_name','epg_name']
     for row in column_for_excel_raw:
         new_row = {}
         ap_name = ''
@@ -32,6 +33,7 @@ def parse_column(column_for_excel_raw):
                  if re.search('/node-(.*?)/', v):
                     node_id = (re.search('/node-(.*?)/', v)).group(1)
                     new_row['node_id'] = node_id
+                    new_row['host_name'] = node_names[node_id]
             if k == 'encap':
                 new_row['VLAN'] = v
         if ap_name == '' :
@@ -40,6 +42,7 @@ def parse_column(column_for_excel_raw):
         output.append(new_row)
     return [output,column]
 
+#Return a list of dict with correspond to each row of the excel sheet not parsed
 def get_vlan_encap(my_fabric, api_name, column):
     output = []
     data_json = json.loads(my_fabric.apic_json_get(api_name))
@@ -48,8 +51,31 @@ def get_vlan_encap(my_fabric, api_name, column):
             row = {}
             for j, attribute in v.items():
                 for i in column:
-                   row[i]= attribute[i]
+                   row[i] = attribute[i]
                 output.append(row)
+    return output
+
+# Returns a dict with Node id as key and host name as value
+def get_node_name(my_fabric, api_name):
+    output = {}
+    data_json = json.loads(my_fabric.apic_json_get(api_name))
+    for fabric_node in data_json['imdata']:
+        for k, v in fabric_node['fabricNode'].items():
+            for j, attribute in v.items():
+                if j == 'dn':
+                    if re.search('/node-(.*)', attribute):
+                        node_id = (re.search('/node-(.*)', attribute)).group(1)
+                if j == 'name':
+                    name = attribute
+            output[node_id] = name
+    return output
+
+# Returns a dict with Node id as key and host name as value
+def get_interfaces(my_fabric, api_name):
+    output = {}
+    data_json = json.loads(my_fabric.apic_json_get(api_name))
+    for interfaces in data_json['imdata']:
+        print(interfaces)
     return output
  
 def main():
@@ -60,12 +86,15 @@ def main():
     cookie = my_fabric.get_cookie()
     my_fabric.set_cookie(cookie)
 
-    excel = excel_lib.Excel('./', "Vlan_Encap5")
-    column_raw = ["encap", "epgDn", "dn"]
-
-    column_for_excel_raw = get_vlan_encap(my_fabric, 'vlanCktEp', column_raw)
-    column_for_excel = parse_column(column_for_excel_raw)
+    excel = excel_lib.Excel('./', "Vlan_Encap6")
     
+    column_raw = ["encap", "epgDn", "dn"]
+    column_for_excel_raw = get_vlan_encap(my_fabric, 'vlanCktEp', column_raw)
+    node_names = get_node_name(my_fabric, 'fabricNode')
+    interfaces = get_interfaces(my_fabric, 'fvIfConn') 
+
+    column_for_excel = parse_column(column_for_excel_raw, node_names)
+
     excel.create_sheet("Vlan_Encap", column_for_excel[1])
     excel.fill_sheet(column_for_excel[0], "Vlan_Encap")
 
