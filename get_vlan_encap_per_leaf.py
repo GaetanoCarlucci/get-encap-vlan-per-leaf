@@ -73,9 +73,7 @@ def get_node_name(my_fabric, api_name):
 # Returns a dict with Node id as key and host name as value
 def get_interfaces(my_fabric, api_name):
     output = {}
-    data_json = json.loads(my_fabric.apic_json_get(api_name))
-    for interfaces in data_json['imdata']:
-        print(interfaces)
+    #data_json = json.loads(my_fabric.apic_json_get(api_name))
     return output
  
 def main():
@@ -86,7 +84,7 @@ def main():
     cookie = my_fabric.get_cookie()
     my_fabric.set_cookie(cookie)
 
-    excel = excel_lib.Excel('./', "Vlan_Encap6")
+    excel = excel_lib.Excel('./', "Vlan_Encap")
     
     column_raw = ["encap", "epgDn", "dn"]
     column_for_excel_raw = get_vlan_encap(my_fabric, 'vlanCktEp', column_raw)
