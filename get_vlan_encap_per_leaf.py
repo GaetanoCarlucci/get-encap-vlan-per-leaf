@@ -12,9 +12,9 @@ from Utils import excel_lib
 import re
 
 # parsed the column in order to get a more user friendly output 
-def parse_column(column_for_excel_raw, node_names):
+def parse_column(column_for_excel_raw, node_names, bd_names, subnet_ip):
     output = []
-    column = ['VLAN','node_id', 'host_name', 'tenant_name','ap_name','epg_name']
+    column = ['VLAN','node_id', 'host_name', 'tenant_name','ap_name','epg_name', 'bd_name', 'subnet_ip']
     for row in column_for_excel_raw:
         new_row = {}
         ap_name = ''
@@ -23,12 +23,22 @@ def parse_column(column_for_excel_raw, node_names):
                 if re.search('/epg-(.*)', v):
                     epg_name = (re.search('/epg-(.*)', v)).group(1)
                     new_row['epg_name'] = epg_name
+                    if epg_name in bd_names:
+                        new_row['bd_name'] = bd_names[epg_name]
+                        if bd_names[epg_name] in subnet_ip:
+                            new_row['subnet_ip'] = subnet_ip[bd_names[epg_name]]
+                        else:
+                            new_row['subnet_ip'] = ''
+                    else:
+                       new_row['bd_name'] = ''
+                       new_row['subnet_ip'] = ''
                 if re.search('/tn-(.*?)/', v):
                     tenant_name = (re.search('/tn-(.*?)/', v)).group(1)
                     new_row['tenant_name'] = tenant_name
                 if re.search('/ap-(.*?)/', v):
                     ap_name = (re.search('/ap-(.*?)/', v)).group(1)
                     new_row['ap_name'] = ap_name
+
             if k == 'dn':
                  if re.search('/node-(.*?)/', v):
                     node_id = (re.search('/node-(.*?)/', v)).group(1)
@@ -39,8 +49,10 @@ def parse_column(column_for_excel_raw, node_names):
         if ap_name == '' :
             new_row['ap_name'] = row['epgDn']
             new_row['epg_name'] = row['epgDn']
+            new_row['bd_name'] = ''
+            new_row['subnet_ip'] = ''
         output.append(new_row)
-    return [output,column]
+    return [output, column]
 
 #Return a list of dict with correspond to each row of the excel sheet not parsed
 def get_vlan_encap(my_fabric, api_name, column):
@@ -70,11 +82,36 @@ def get_node_name(my_fabric, api_name):
             output[node_id] = name
     return output
 
-# Returns a dict with Node id as key and host name as value
-def get_interfaces(my_fabric, api_name):
+# Returns a dict with bd name as key and ip as value
+def get_ip(my_fabric, api_name):
     output = {}
-    #data_json = json.loads(my_fabric.apic_json_get(api_name))
+    data_json = json.loads(my_fabric.apic_json_get(api_name))
+    for subnet in data_json['imdata']:
+        for k, v in subnet['fvSubnet'].items():
+            for j, attribute in v.items():
+                if j == 'dn':
+                    if re.search('/BD-(.*?)/', attribute):
+                        bd_name = (re.search('/BD-(.*?)/', attribute)).group(1)
+                if j == 'ip':
+                    ip = attribute
+            output[bd_name] = ip
     return output
+
+# Returns a dict with EPG as key and BD name as value
+def get_bd(my_fabric, api_name):
+    output = {}
+    data_json = json.loads(my_fabric.apic_json_get(api_name))
+    for bd_ref in data_json['imdata']:
+        for k, v in bd_ref['fvRsBd'].items():
+            for j, attribute in v.items():
+                if j == 'dn':
+                    if re.search('/epg-(.*?)/', attribute):
+                        epg_name = (re.search('/epg-(.*?)/', attribute)).group(1)
+                if j == 'tDn':
+                    if re.search('/BD-(.*)', attribute):
+                        bd_name = (re.search('/BD-(.*)', attribute)).group(1)
+            output[epg_name] = bd_name
+    return output   
  
 def main():
     with open('Utils/credentials.json') as json_file:
@@ -84,14 +121,15 @@ def main():
     cookie = my_fabric.get_cookie()
     my_fabric.set_cookie(cookie)
 
-    excel = excel_lib.Excel('./', "Vlan_Encap")
+    excel = excel_lib.Excel('./', "Vlan_Encap2")
     
     column_raw = ["encap", "epgDn", "dn"]
     column_for_excel_raw = get_vlan_encap(my_fabric, 'vlanCktEp', column_raw)
     node_names = get_node_name(my_fabric, 'fabricNode')
-    interfaces = get_interfaces(my_fabric, 'fvIfConn') 
+    bd_names = get_bd(my_fabric, 'fvRsBd')
+    subnet_ip = get_ip(my_fabric, 'fvSubnet')
 
-    column_for_excel = parse_column(column_for_excel_raw, node_names)
+    column_for_excel = parse_column(column_for_excel_raw, node_names, bd_names, subnet_ip)
 
     excel.create_sheet("Vlan_Encap", column_for_excel[1])
     excel.fill_sheet(column_for_excel[0], "Vlan_Encap")
