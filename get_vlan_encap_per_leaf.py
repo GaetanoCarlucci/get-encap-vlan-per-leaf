@@ -136,5 +136,7 @@ def main():
 
     print("Vlan_Encap.xlsx successfully created")
 
+    excel.convert_to_csv("Vlan_Encap", "Vlan_Encap.csv")
+
 if __name__ == "__main__":
     main()
