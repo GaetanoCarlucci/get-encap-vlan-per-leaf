@@ -1,4 +1,5 @@
 *.json
 *.xlsx
+*.csv
 venv
 Utils/__pycache__/
