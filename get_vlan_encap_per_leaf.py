@@ -88,13 +88,16 @@ def get_ip(my_fabric, api_name):
     data_json = json.loads(my_fabric.apic_json_get(api_name))
     for subnet in data_json['imdata']:
         for k, v in subnet['fvSubnet'].items():
+            found_bd = 0
             for j, attribute in v.items():
                 if j == 'dn':
                     if re.search('/BD-(.*?)/', attribute):
                         bd_name = (re.search('/BD-(.*?)/', attribute)).group(1)
+                        found_bd = 1
                 if j == 'ip':
                     ip = attribute
-            output[bd_name] = ip
+            if found_bd == 1:
+               output[bd_name] = ip
     return output
 
 # Returns a dict with EPG as key and BD name as value
@@ -121,7 +124,7 @@ def main():
     cookie = my_fabric.get_cookie()
     my_fabric.set_cookie(cookie)
 
-    excel = excel_lib.Excel('./', "Vlan_Encap2")
+    excel = excel_lib.Excel('./', "Vlan_Encap")
     
     column_raw = ["encap", "epgDn", "dn"]
     column_for_excel_raw = get_vlan_encap(my_fabric, 'vlanCktEp', column_raw)
