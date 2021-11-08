@@ -42,7 +42,7 @@ Example:
 then run the script using a *python3* interpreter:
 
 ```
-$python3 main.py
+$python3 get-encap-vlan-per-leaf.py
 ```
 
 it will create the xlsx file `Vlan_Encap_Per_Leaf.xlsx` that contains a sheet with the list of encap vlan used on each leaf:
