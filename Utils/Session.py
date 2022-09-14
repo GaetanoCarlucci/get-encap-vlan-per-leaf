@@ -23,11 +23,13 @@ class Session(object):
 
     def get_cookie(self):
         try:
-            auth_url = "https://%s:%s/api/mo/aaaLogin.xml" % (self.ip, self.port)
-            auth_xml = "<aaaUser name='%s' pwd ='%s'/>" % (self.user, self.passwd)
+            auth_url = "https://%s:%s/api/aaaLogin.json" % (self.ip, self.port)
+            auth_json = '{"aaaUser": {"attributes": {"name": "%s", "pwd": "%s"}}}' % (self.user, self.passwd)
             print("Getting cookie from %s" % self.ip)
-            session = requests.post(auth_url, data=auth_xml, verify=False, timeout=5)
-            return session.cookies
+            session = requests.post(auth_url, data=auth_json, verify=False, timeout=5)
+            session_json = session.json()
+            token = session_json["imdata"][0]["aaaLogin"]["attributes"]["token"]
+            return {'APIC-cookie': token}
         except requests.exceptions.Timeout:
             print("APIC %s timed out " % (self.ip))
         except requests.exceptions.ConnectionError:
