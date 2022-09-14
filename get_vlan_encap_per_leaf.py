@@ -11,42 +11,43 @@ from Utils.Session import Session
 from Utils import excel_lib
 import re
 
-# parsed the column in order to get a more user friendly output 
+# parsed the column in order to get a more user friendly output
 def parse_column(column_for_excel_raw, node_names, bd_names, subnet_ip):
     output = []
-    column = ['VLAN','node_id', 'host_name', 'tenant_name','ap_name','epg_name', 'bd_name', 'subnet_ip']
+    column = ['VLAN', 'node_id', 'host_name', 'tenant_name', 'ap_name', 'epg_name', 'bd_name', 'subnet_ip']
     for row in column_for_excel_raw:
         new_row = {}
         ap_name = ''
         for k, v in row.items():
             if k == 'epgDn':
                 if re.search('/epg-(.*)', v):
-                    epg_name = (re.search('/epg-(.*)', v)).group(1)
+                    app_name = (re.search('/ap-(.*?)/epg-(.*)', v)).group(1)
+                    epg_name = (re.search('/ap-(.*?)/epg-(.*)', v)).group(2)
                     new_row['epg_name'] = epg_name
-                    if epg_name in bd_names:
-                        new_row['bd_name'] = bd_names[epg_name]
-                        if bd_names[epg_name] in subnet_ip:
-                            new_row['subnet_ip'] = subnet_ip[bd_names[epg_name]]
+                    key_in_bd_names = app_name + '/' + epg_name
+                    if key_in_bd_names in bd_names:
+                        new_row['bd_name'] = bd_names[key_in_bd_names]
+                        if bd_names[key_in_bd_names] in subnet_ip:
+                            new_row['subnet_ip'] = subnet_ip[bd_names[key_in_bd_names]]
                         else:
                             new_row['subnet_ip'] = ''
                     else:
-                       new_row['bd_name'] = ''
-                       new_row['subnet_ip'] = ''
+                        new_row['bd_name'] = ''
+                        new_row['subnet_ip'] = ''
                 if re.search('/tn-(.*?)/', v):
                     tenant_name = (re.search('/tn-(.*?)/', v)).group(1)
                     new_row['tenant_name'] = tenant_name
                 if re.search('/ap-(.*?)/', v):
                     ap_name = (re.search('/ap-(.*?)/', v)).group(1)
                     new_row['ap_name'] = ap_name
-
             if k == 'dn':
-                 if re.search('/node-(.*?)/', v):
+                if re.search('/node-(.*?)/', v):
                     node_id = (re.search('/node-(.*?)/', v)).group(1)
                     new_row['node_id'] = node_id
                     new_row['host_name'] = node_names[node_id]
             if k == 'encap':
                 new_row['VLAN'] = v
-        if ap_name == '' :
+        if ap_name == '':
             new_row['ap_name'] = row['epgDn']
             new_row['epg_name'] = row['epgDn']
             new_row['bd_name'] = ''
@@ -109,12 +110,13 @@ def get_bd(my_fabric, api_name):
             for j, attribute in v.items():
                 if j == 'dn':
                     if re.search('/epg-(.*?)/', attribute):
-                        epg_name = (re.search('/epg-(.*?)/', attribute)).group(1)
+                        app_name = (re.search('/ap-(.*?)/epg-(.*?)/', attribute)).group(1)
+                        epg_name = (re.search('/ap-(.*?)/epg-(.*?)/', attribute)).group(2)
                 if j == 'tDn':
                     if re.search('/BD-(.*)', attribute):
                         bd_name = (re.search('/BD-(.*)', attribute)).group(1)
-            output[epg_name] = bd_name
-    return output   
+            output[app_name + '/' + epg_name] = bd_name
+    return output
  
 def main():
     with open('Utils/credentials.json') as json_file:
