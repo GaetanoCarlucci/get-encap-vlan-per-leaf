@@ -43,3 +43,11 @@ class Session(object):
             print(json_get.text)
         else:
             return json_get.text
+    def apic_json_post(self, url, data):
+        post_json_url = "https://%s:%s/api/node/mo/%s.json" % (self.ip, self.port, url)
+        json_post = requests.post(post_json_url, cookies=self.cookie, data=data, verify=False)
+        print(post_json_url)
+        if json_post.status_code != 200:
+            print(json_post.text)
+        else:
+            return json_post.text            
