@@ -50,6 +50,8 @@ it will create the xlsx file `Vlan_Encap_Per_Leaf.xlsx` that contains a sheet wi
 
 <img src="excel.png" width="400" />
 
+and it will also provide a `Vlan_Encap.csv` file with the date in comma-separated values format.
+
 
 ## Authors
 
