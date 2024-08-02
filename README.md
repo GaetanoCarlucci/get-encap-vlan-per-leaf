@@ -53,9 +53,9 @@ it will create the xlsx file `Vlan_Encap_Per_Leaf.xlsx` that contains a sheet wi
 and it will also provide a `Vlan_Encap.csv` file with the date in comma-separated values format.
 
 
-## CSV Fields Explanation
+### CSV Fields Explanation
 
-### VLAN
+#### VLAN
 - **Description**: The external VLAN encapsulation identifier used by the corresponding EPG, in the format `vlan-<number>`. This is a unique label for the VLAN.
 - **Example**: `vlan-876`
 
@@ -94,9 +94,3 @@ and it will also provide a `Vlan_Encap.csv` file with the date in comma-separate
 ### subnet_ip
 - **Description**: The subnet IP address and subnet mask associated with the Bridge Domain. This defines the IP range used by the BD for Layer 3 routing.
 - **Example**: `10.116.141.1/24`
-
-
-
-## Authors
-
-* **Gaetano Carlucci** 
