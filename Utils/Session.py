@@ -8,7 +8,9 @@
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 
 class Session(object):
     def __init__(self, apic_ip, apic_port, user, passwd):
@@ -16,9 +18,10 @@ class Session(object):
         self.port = apic_port
         self.user = user
         self.passwd = passwd
+        self.ACIERROR = Exception
         self.cookie = ''
 
-    def set_cookie(self,cookie):
+    def set_cookie(self, cookie):
         self.cookie = cookie
 
     def get_cookie(self):
@@ -35,19 +38,42 @@ class Session(object):
         except requests.exceptions.ConnectionError:
             print("Connection error can't logging to APIC %s with user %s" % (self.ip, self.user))
 
+    def apic_xml_post(self, xmldata):
+        xmlpost_url = "https://%s:%s/api/policymgr/mo/.xml" % (self.ip, self.port)
+        xmlpost = requests.post(xmlpost_url, data=xmldata, cookies=self.cookie, verify=False)
+        if xmlpost.status_code != 200:
+            return xmlpost.text
+        else:
+            return 200
+
+    def apic_json_post(self, epg_dn, json_data):
+        # Update the URL to use the .json endpoint
+        jsonpost_url = f"https://{self.ip}:{self.port}/api/node/mo/{epg_dn}.json"
+
+        # Send a POST request with the JSON payload
+        jsonpost = requests.post(jsonpost_url, json=json_data, cookies=self.cookie, verify=False)
+        print(jsonpost_url)
+        print(json_data)
+        # Check the response status code
+        if jsonpost.status_code != 200:
+            return jsonpost.text
+        else:
+            return 200
+
     def apic_json_get(self, url):
         get_json_url = "https://%s:%s/api/class/%s.json" % (self.ip, self.port, url)
         json_get = requests.get(get_json_url, cookies=self.cookie, verify=False)
         print(get_json_url)
-        if json_get.status_code != 200:
-            print(json_get.text)
-        else:
+        if json_get.status_code == 200:
             return json_get.text
-    def apic_json_post(self, url, data):
-        post_json_url = "https://%s:%s/api/node/mo/%s.json" % (self.ip, self.port, url)
-        json_post = requests.post(post_json_url, cookies=self.cookie, data=data, verify=False)
-        print(post_json_url)
-        if json_post.status_code != 200:
-            print(json_post.text)
         else:
-            return json_post.text            
+            print(json_get.text)
+
+    def leaf_json_get(self, url):
+        get_json_url = url
+        json_get = requests.get(get_json_url, cookies=self.cookie, verify=False)
+        print(get_json_url)
+        if json_get.status_code == 200:
+            return json_get.text
+        else:
+            print(json_get.text)
