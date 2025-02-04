@@ -23,7 +23,8 @@ def get_all_endpoint(my_fabric, api_name):
                         tenant_name = (re.search('/tn-(.*?)/ap-(.*?)/epg-(.*)', attribute)).group(1)
                         app_name = (re.search('/tn-(.*?)/ap-(.*?)/epg-(.*)', attribute)).group(2)
                         epg_name = (re.search('/tn-(.*?)/ap-(.*?)/epg-(.*)', attribute)).group(3)
-                        output.append([tenant_name, app_name, epg_name])
+                        epg_dn = attribute
+                        output.append([tenant_name, app_name, epg_name, epg_dn])
     return output
 
 def main():
@@ -37,6 +38,21 @@ def main():
     my_fabric.set_cookie(cookie)
 
     end_point_list = get_all_endpoint(my_fabric, 'fvIp')
+
+    #take the first epg from the firt end point from the list ang get dn
+    pattern = r'/cep-[^/]*|/ip-\[.*?\]'
+    epg_dn = re.sub(pattern, '', end_point_list[0][-1])
+    payload = {
+        "fvAEPg": {
+            "attributes": {
+                "dn": epg_dn,
+                "shutdown": "true"
+            },
+            "children": []
+        }
+    }
+
+    my_fabric.apic_json_post(epg_dn, payload)
 
     # Open a file for writing
     with open('endpoints.csv', 'w', newline='') as file:
